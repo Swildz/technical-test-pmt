@@ -1,0 +1,455 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Subscriber Usage Management API",
+    "version": "1.0.0",
+    "description": "Dokumentasi REST API interaktif untuk Subscriber Usage Recording, Aggregation, dan Snapshot Automation.\n\nDibuat untuk memenuhi technical test dengan stack Node.js & Express.js.",
+    "contact": {
+      "name": "Candidate",
+      "email": "candidate@recruitment.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Usage",
+      "description": "Endpoints untuk mencatat dan mengambil riwayat penggunaan pelanggan (callMinutes, smsCount, dataUsageMB)"
+    },
+    {
+      "name": "Subscribers",
+      "description": "Endpoints agregasi metrik per subscriber"
+    },
+    {
+      "name": "Snapshots",
+      "description": "Endpoints otomasi dan pengunduhan file CSV snapshot penggunaan"
+    },
+    {
+      "name": "System",
+      "description": "Endpoints pemantauan kesehatan server"
+    }
+  ],
+  "paths": {
+    "/api/usage": {
+      "post": {
+        "tags": ["Usage"],
+        "summary": "Mencatat penggunaan subscriber baru",
+        "description": "Mencatat rekaman penggunaan pelanggan yang mencakup subscriberId, callMinutes, smsCount, dan dataUsageMB.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordUsageRequest"
+              },
+              "example": {
+                "subscriberId": "SUB01",
+                "callMinutes": 45,
+                "smsCount": 12,
+                "dataUsageMB": 2000,
+                "timestamp": "2025-08-02 10:00"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Penggunaan berhasil dicatat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Subscriber usage recorded successfully." },
+                    "data": { "$ref": "#/components/schemas/UsageRecord" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi input gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Usage"],
+        "summary": "Mengambil seluruh rekaman penggunaan pelanggan",
+        "description": "Mengembalikan daftar data rekaman penggunaan pelanggan. Mendukung filter opsional berdasarkan subscriberId, rentang tanggal, dan paginasi.",
+        "parameters": [
+          {
+            "name": "subscriberId",
+            "in": "query",
+            "description": "Filter berdasarkan ID subscriber tertentu (misal: SUB01)",
+            "required": false,
+            "schema": { "type": "string", "example": "SUB01" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Filter tanggal awal (format: YYYY-MM-DD)",
+            "required": false,
+            "schema": { "type": "string", "example": "2025-08-01" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Filter tanggal akhir (format: YYYY-MM-DD)",
+            "required": false,
+            "schema": { "type": "string", "example": "2025-08-02" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Nomor halaman untuk paginasi",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Batas jumlah data per halaman",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar penggunaan berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 8 },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": { "type": "integer", "example": 8 },
+                        "page": { "type": "integer", "example": 1 },
+                        "limit": { "type": "integer", "example": 8 },
+                        "totalPages": { "type": "integer", "example": 1 }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/UsageRecord" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usage/{id}": {
+      "get": {
+        "tags": ["Usage"],
+        "summary": "Mengambil satu record penggunaan berdasarkan ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID unik rekaman penggunaan (misal: REC-001)",
+            "schema": { "type": "string", "example": "REC-001" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record penggunaan ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/UsageRecord" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Usage record with ID \"REC-999\" not found." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscribers": {
+      "get": {
+        "tags": ["Subscribers"],
+        "summary": "Mengambil rekapitulasi data seluruh subscriber",
+        "description": "Mengembalikan daftar subscriber beserta akumulasi data penggunaan (total minutes, sms, MB, dan rata-rata call minutes).",
+        "responses": {
+          "200": {
+            "description": "Daftar subscriber berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 6 },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SubscriberSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscribers/{subscriberId}/summary": {
+      "get": {
+        "tags": ["Subscribers"],
+        "summary": "Mengambil ringkasan detail untuk satu subscriber",
+        "parameters": [
+          {
+            "name": "subscriberId",
+            "in": "path",
+            "required": true,
+            "description": "ID Subscriber (misal: SUB01)",
+            "schema": { "type": "string", "example": "SUB01" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail ringkasan subscriber ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "subscriber": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string", "example": "SUB01" },
+                            "name": { "type": "string", "example": "Amir" },
+                            "plan": { "type": "string", "example": "Basic" },
+                            "activationDate": { "type": "string", "example": "2023-01-12" }
+                          }
+                        },
+                        "snapshotCount": { "type": "integer", "example": 2 },
+                        "totalCallMinutes": { "type": "number", "example": 75 },
+                        "totalSmsCount": { "type": "integer", "example": 18 },
+                        "totalDataUsageMB": { "type": "number", "example": 2700 },
+                        "avgCallMinutes": { "type": "number", "example": 37.5 },
+                        "records": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/UsageRecord" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/snapshots": {
+      "get": {
+        "tags": ["Snapshots"],
+        "summary": "Mengambil daftar file CSV snapshot yang telah di-generate",
+        "responses": {
+          "200": {
+            "description": "Daftar file snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 1 },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SnapshotFile" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/snapshots/trigger": {
+      "post": {
+        "tags": ["Snapshots"],
+        "summary": "Memicu pembuatan file CSV snapshot secara manual",
+        "description": "Mengekspor seluruh rekaman penggunaan saat ini ke file CSV baru di folder ./snapshots/ sesuai konvensi nama file WIB.",
+        "responses": {
+          "201": {
+            "description": "Snapshot berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Snapshot generated successfully." },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "filename": { "type": "string", "example": "usage_snapshot_2026-09-30_16-45-00_WIB.csv" },
+                        "filePath": { "type": "string", "example": "D:\\2026 - REC\\PMT\\snapshots\\usage_snapshot_2026-09-30_16-45-00_WIB.csv" },
+                        "recordCount": { "type": "integer", "example": 8 },
+                        "generatedAtWIB": { "type": "string", "example": "9/30/2026, 4:45:00 PM WIB" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Pemeriksaan kesehatan server (Health check)",
+        "responses": {
+          "200": {
+            "description": "Server dalam kondisi sehat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "OK" },
+                    "uptime": { "type": "number", "example": 142.5 },
+                    "timestamp": { "type": "string", "example": "2026-09-30T09:45:00.000Z" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RecordUsageRequest": {
+        "type": "object",
+        "required": ["subscriberId", "callMinutes", "smsCount", "dataUsageMB"],
+        "properties": {
+          "subscriberId": {
+            "type": "string",
+            "description": "ID Subscriber (misal: SUB01)",
+            "example": "SUB01"
+          },
+          "callMinutes": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Durasi panggilan suara dalam menit",
+            "example": 40
+          },
+          "smsCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Jumlah pesan SMS",
+            "example": 10
+          },
+          "dataUsageMB": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Jumlah kuota data internet dalam Megabyte (MB)",
+            "example": 1500
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Waktu record (opsional, format YYYY-MM-DD HH:mm atau ISO string)",
+            "example": "2025-08-01 08:00"
+          }
+        }
+      },
+      "UsageRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "REC-001" },
+          "subscriberId": { "type": "string", "example": "SUB01" },
+          "callMinutes": { "type": "number", "example": 40 },
+          "smsCount": { "type": "integer", "example": 10 },
+          "dataUsageMB": { "type": "number", "example": 1500 },
+          "timestamp": { "type": "string", "example": "2025-08-01 08:00" }
+        }
+      },
+      "SubscriberSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "SUB01" },
+          "name": { "type": "string", "example": "Amir" },
+          "plan": { "type": "string", "example": "Basic" },
+          "activationDate": { "type": "string", "example": "2023-01-12" },
+          "snapshotCount": { "type": "integer", "example": 2 },
+          "totalCallMinutes": { "type": "number", "example": 75 },
+          "totalSmsCount": { "type": "integer", "example": 18 },
+          "totalDataUsageMB": { "type": "number", "example": 2700 },
+          "avgCallMinutes": { "type": "number", "example": 37.5 }
+        }
+      },
+      "SnapshotFile": {
+        "type": "object",
+        "properties": {
+          "filename": { "type": "string", "example": "usage_snapshot_2026-09-30_16-33-56_WIB.csv" },
+          "sizeBytes": { "type": "integer", "example": 390 },
+          "createdAt": { "type": "string", "example": "2026-09-30T09:33:56.000Z" }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string", "example": "Validation failed." },
+          "errors": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": [
+              "Field \"subscriberId\" is required and must be a non-empty string.",
+              "Field \"callMinutes\" is required and must be a non-negative number."
+            ]
+          }
+        }
+      }
+    }
+  }
+}

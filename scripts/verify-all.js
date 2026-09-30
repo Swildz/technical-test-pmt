@@ -169,6 +169,22 @@ async function runTests() {
     if (res.body.count === 0) throw new Error('Expected at least 1 snapshot');
   });
 
+  // 11. Swagger JSON endpoint
+  await test('GET /api-docs.json returns OpenAPI 3.0 specification', async () => {
+    const res = await makeRequest('/api-docs.json');
+    if (res.status !== 200 || !res.body || res.body.openapi !== '3.0.3') {
+      throw new Error('Swagger JSON specification invalid');
+    }
+  });
+
+  // 12. Swagger UI endpoint
+  await test('GET /api-docs/ serves Swagger UI documentation', async () => {
+    const res = await makeRequest('/api-docs/');
+    if (res.status !== 200 && res.status !== 301) {
+      throw new Error(`Expected 200 or 301, got ${res.status}`);
+    }
+  });
+
   console.log('\n================================================================');
   console.log(`Results: ${passed} Passed, ${failed} Failed`);
   console.log('================================================================\n');

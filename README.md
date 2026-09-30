@@ -92,6 +92,8 @@ Buka browser Anda dan akses:
 
 | Method | Endpoint | Deskripsi | Status Code |
 | :--- | :--- | :--- | :--- |
+| `GET` | `/api-docs` | **Interactive Swagger UI Documentation** (OpenAPI 3.0) | `200 OK` |
+| `GET` | `/api-docs.json` | Raw OpenAPI 3.0 Specification JSON | `200 OK` |
 | `POST` | `/api/usage` | Mencatat riwayat penggunaan baru pelanggan | `201 Created` / `400 Bad Request` |
 | `GET` | `/api/usage` | Mengambil seluruh riwayat penggunaan (mendukung filter & paginasi) | `200 OK` |
 | `GET` | `/api/usage/:id` | Mengambil satu record penggunaan berdasarkan ID unik | `200 OK` / `404 Not Found` |
@@ -242,6 +244,20 @@ Aplikasi menyertakan frontend modern siap pakai di `http://localhost:3000`:
 - **Live Search & Filter**: Memungkinkan pencarian data berdasarkan Subscriber ID tanpa me-refresh browser.
 - **Tabel Rekap Pelanggan**: Menyajikan komparasi paket pelanggan, akumulasi kuota, dan rata-rata durasi telepon.
 - **One-Click Snapshot Trigger**: Tombol untuk membuat dan meninjau file CSV snapshot secara langsung.
+- **Direct Swagger Access**: Tautan langsung ke dokumentasi Swagger di navbar dan footer.
+
+---
+
+### 4.4 Dokumentasi Interaktif Swagger (OpenAPI 3.0)
+
+Aplikasi telah dilengkapi antarmuka **Swagger UI** standar industri yang dapat diakses secara langsung:
+- **Swagger UI URL**: 👉 **`http://localhost:3000/api-docs`**
+- **Raw OpenAPI Spec (JSON)**: 👉 **`http://localhost:3000/api-docs.json`**
+
+Fitur Swagger Docs yang disediakan:
+1. **Interactive "Try it out"**: Penguji/evaluator dapat langsung mengirim request `POST /api/usage`, `GET /api/usage`, atau `GET /api/subscribers` langsung dari antarmuka browser tanpa perlu Postman.
+2. **Schema Models & Validations**: Menampilkan secara transparan model `RecordUsageRequest`, `UsageRecord`, `SubscriberSummary`, `SnapshotFile`, dan format pesan error `ValidationErrorResponse`.
+3. **Dokumentasi Lengkap Status Code**: HTTP 200, 201, 400 (Validation Error), 404 (Not Found), dan 500 (Internal Server Error).
 
 ---
 

@@ -7,6 +7,7 @@ const server = app.listen(PORT, () => {
   console.log('====================================================');
   console.log(`  Subscriber Usage API Service running on port ${PORT}`);
   console.log(`  API Base URL:     http://localhost:${PORT}/api`);
+  console.log(`  Swagger UI Docs:  http://localhost:${PORT}/api-docs`);
   console.log(`  Web Dashboard:    http://localhost:${PORT}`);
   console.log(`  Health Check:     http://localhost:${PORT}/health`);
   console.log('====================================================');
