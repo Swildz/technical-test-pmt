@@ -1,0 +1,32 @@
+{
+  "name": "pmt-technical-test",
+  "version": "1.0.0",
+  "description": "Subscriber Usage API, Snapshot Automation, SQL Queries, and Troubleshooting Solution",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "snapshot:now": "node scripts/run-snapshot-now.js",
+    "cleanup:snapshots": "node scripts/cleanup-snapshots.js",
+    "simulate:old": "node scripts/simulate-old-snapshots.js",
+    "test": "npm run test:api && npm run test:q4 && npm run test:sql",
+    "test:api": "node scripts/verify-all.js",
+    "test:q4": "node q4-troubleshoot/solution.js",
+    "test:sql": "node scripts/run-sql-demo.js"
+  },
+  "keywords": [
+    "express",
+    "api",
+    "subscriber-usage",
+    "cron",
+    "automation",
+    "sql"
+  ],
+  "author": "Candidate",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3"
+  }
+}

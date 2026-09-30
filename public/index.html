@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriber Usage Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="logo-icon">📊</div>
+        <div class="logo-text">
+          <h1>Subscriber Usage Portal</h1>
+          <span class="badge live-badge">● API Live & Connected</span>
+        </div>
+      </div>
+      <div class="nav-meta">
+        <div class="time-box">
+          <span class="label">Server Time (WIB)</span>
+          <span id="currentTime" class="time-val">--:--:-- WIB</span>
+        </div>
+        <button id="triggerSnapshotBtn" class="btn btn-secondary">
+          💾 Trigger CSV Snapshot
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="content-container">
+      <!-- Notification Banner -->
+      <div id="alertBox" class="alert-box hidden"></div>
+
+      <!-- KPI Stat Cards -->
+      <section class="kpi-grid">
+        <div class="kpi-card card-gradient-1">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-data">
+            <span class="kpi-title">Total Subscribers</span>
+            <h2 id="totalSubscribers">--</h2>
+            <span class="kpi-sub">Reference Database</span>
+          </div>
+        </div>
+        <div class="kpi-card card-gradient-2">
+          <div class="kpi-icon">🌐</div>
+          <div class="kpi-data">
+            <span class="kpi-title">Total Data Usage</span>
+            <h2 id="totalDataMB">-- MB</h2>
+            <span class="kpi-sub">Across All Snapshots</span>
+          </div>
+        </div>
+        <div class="kpi-card card-gradient-3">
+          <div class="kpi-icon">📞</div>
+          <div class="kpi-data">
+            <span class="kpi-title">Total Call Minutes</span>
+            <h2 id="totalCalls">-- Min</h2>
+            <span class="kpi-sub">Aggregated Duration</span>
+          </div>
+        </div>
+        <div class="kpi-card card-gradient-4">
+          <div class="kpi-icon">💬</div>
+          <div class="kpi-data">
+            <span class="kpi-title">Total SMS Sent</span>
+            <h2 id="totalSms">--</h2>
+            <span class="kpi-sub">Recorded Outgoing SMS</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid: Form & Subscribers Overview -->
+      <section class="two-col-grid">
+        <!-- Record Form -->
+        <div class="card form-card">
+          <div class="card-header">
+            <h3>📝 Record Subscriber Usage</h3>
+            <span class="endpoint-pill">POST /api/usage</span>
+          </div>
+          <form id="recordForm" class="record-form">
+            <div class="form-group">
+              <label for="subscriberId">Subscriber ID *</label>
+              <div class="input-with-quick">
+                <input type="text" id="subscriberId" name="subscriberId" placeholder="e.g. SUB01 or SUB07" required>
+                <div class="quick-tags">
+                  <span class="tag" onclick="selectSub('SUB01')">SUB01</span>
+                  <span class="tag" onclick="selectSub('SUB02')">SUB02</span>
+                  <span class="tag" onclick="selectSub('SUB03')">SUB03</span>
+                  <span class="tag" onclick="selectSub('SUB04')">SUB04</span>
+                  <span class="tag" onclick="selectSub('SUB05')">SUB05</span>
+                  <span class="tag" onclick="selectSub('SUB06')">SUB06</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="callMinutes">Call Minutes *</label>
+                <input type="number" id="callMinutes" name="callMinutes" min="0" step="1" placeholder="e.g. 45" required>
+              </div>
+              <div class="form-group">
+                <label for="smsCount">SMS Count *</label>
+                <input type="number" id="smsCount" name="smsCount" min="0" step="1" placeholder="e.g. 12" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dataUsageMB">Data Usage (MB) *</label>
+                <input type="number" id="dataUsageMB" name="dataUsageMB" min="0" step="1" placeholder="e.g. 2500" required>
+              </div>
+              <div class="form-group">
+                <label for="timestamp">Timestamp (Optional)</label>
+                <input type="text" id="timestamp" name="timestamp" placeholder="YYYY-MM-DD HH:mm (defaults to now)">
+              </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+              Submit Usage Record
+            </button>
+          </form>
+        </div>
+
+        <!-- Subscribers Summary Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3>👥 Subscribers Summary</h3>
+            <span class="endpoint-pill">GET /api/subscribers</span>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="subscribersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Plan</th>
+                  <th>Snapshots</th>
+                  <th>Total MB</th>
+                  <th>Avg Min</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersTableBody">
+                <tr><td colspan="6" class="text-center">Loading subscribers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage Records History -->
+      <section class="card full-width-card">
+        <div class="card-header flex-between">
+          <div>
+            <h3>📋 Recorded Usage History</h3>
+            <span class="endpoint-pill">GET /api/usage</span>
+          </div>
+          <div class="filter-controls">
+            <input type="text" id="filterSubscriberId" placeholder="Filter by Sub ID..." class="input-sm">
+            <button id="refreshDataBtn" class="btn btn-sm btn-outline">🔄 Refresh</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="usageTable">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Subscriber ID</th>
+                <th>Call Minutes</th>
+                <th>SMS Count</th>
+                <th>Data Usage (MB)</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="usageTableBody">
+              <tr><td colspan="6" class="text-center">Loading usage records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Snapshot Files Archive -->
+      <section class="card full-width-card">
+        <div class="card-header flex-between">
+          <div>
+            <h3>📁 Generated CSV Snapshots (Q2 Automation)</h3>
+            <span class="endpoint-pill">GET /api/snapshots</span>
+          </div>
+          <button id="refreshSnapshotsBtn" class="btn btn-sm btn-outline">🔄 Check Files</button>
+        </div>
+        <div class="snapshots-info-banner">
+          <span>⏰ Automated Cron Schedule: <strong>08:00, 12:00, 15:00 WIB</strong> (<code>0 8,12,15 * * *</code>)</span>
+          <span>📁 Saved in: <code>./snapshots/usage_snapshot_YYYY-MM-DD_HH-mm-ss_WIB.csv</code></span>
+        </div>
+        <div class="snapshots-list" id="snapshotsList">
+          <div class="empty-state">Loading snapshot files...</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>PT Multipolar Technology Tbk - Technical Assessment Implementation &copy; 2026</p>
+      <div class="footer-links">
+        <a href="/api/usage" target="_blank">Raw Usage API</a>
+        <a href="/api/subscribers" target="_blank">Raw Subscribers API</a>
+        <a href="/health" target="_blank">Health Check</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
