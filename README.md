@@ -43,7 +43,7 @@ Proyek ini dibangun untuk memenuhi seluruh persyaratan technical test:
 
 ### Langkah 1: Clone / Buka Repository
 ```bash
-git clone <repository_url>
+git clone https://github.com/Swildz/technical-test-pmt
 cd PMT
 ```
 
